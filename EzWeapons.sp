@@ -15,7 +15,7 @@ public Plugin myinfo =
     url = "https://github.com/kashinoda/",
 };
 
-// Weapon Array [0] Item Name, [1] Formatted name, [2] Lookup name, [3] Include Hemlet
+// Weapon Array: [0] Weapon Name, [1] Formatted name, [2] Lookup name, [3] Include Hemlet
 
 char sWeapons[][][] = 
 {
@@ -51,137 +51,321 @@ char sWeapons[][][] =
     { "weapon_xm1014", "XM1014", "xm", "1" },
     { "weapon_revolver", "R8 Revolver", "r8", "1" },
     { "weapon_mp5sd", "MP5", "mp5", "1" },
-    { "", "Knife", "knife", "1" },
-    { "weapon_taser", "Zeus", "zeus", "1" },
+    { "", "Knife", "knife", "0" },
+  /*  { "weapon_taser", "Zeus", "zeus", "1" },*/
 };
+
+// Item Array: [0] Item Name, [1] Formatted name, [2] Lookup name, [3] Grenade Offset or item type, [4] CT KeyValue Label, [5] T KeyValue Label
 
 char sItems[][][] = 
 {
-    { "weapon_snowball", "SNOWBALLS", "snowball" },
-    { "weapon_hegrenade", "GRENADES", "grenade" },
-    { "weapon_smokegrenade", "SMOKES", "smoke" },
-    { "weapon_flashbang", "FLASHBANGS", "flash" },
-    { "weapon_tagrenade", "TAG GRENADS", "tag" },
-    { "weapon_decoy", "DECOYS", "decoy" },
-    { "weapon_breachcharge", "BREACH CHARGES", "charge" },
-    { "weapon_bumpmine", "BUMP MINES", "mine" },
+    { "weapon_snowball", "SNOWBALLS", "snowball","25", "CT_Snowball", "T_Snowball" },
+    { "weapon_hegrenade", "GRENADES", "grenade", "14", "CT_Grenade", "T_Grenade" },
+    { "weapon_smokegrenade", "SMOKES", "smoke", "16", "CT_Smoke", "T_Smoke" },
+    { "weapon_flashbang", "FLASHBANGS", "flash", "15", "CT_Flash", "T_Flash" },
+    { "weapon_tagrenade", "TAG GRENADS", "tag", "22", "CT_Tag", "T_Tag" },
+    { "weapon_decoy", "DECOYS", "decoy", "18", "CT_Decoy", "T_Decoy" },
+    { "weapon_breachcharge", "BREACH CHARGES", "charge", "no_offset", "CT_Breach", "T_Breach" },
+    { "weapon_bumpmine", "BUMP MINES", "mine", "no_offset", "CT_Mine", "T_Mine" },
+    { "weapon_healthshot", "HEALTH SHOTS", "hp", "21", "CT_HP", "T_HP" },
+    { "weapon_shield", "SHIELD", "shield", "single_item", "CT_Shield", "T_Shield" },
+    { "item_defuser", "DEFUSER", "defuser", "defuser_item", "CT_Defuse", "T_Defuse" },
+    { "weapon_incgrenade", "MOLOTOVS", "ct_molly", "17", "CT_IncGrenade", "T_IncGrenade" },
+    { "weapon_molotov", "MOLOTOVS", "molly", "17", "CT_Molly", "T_Molly" },
 };
 
-bool bValidSelection;
-bool bSelectionActive;
+int iSelectionActive_CT;
+int iSelectedWeapon_CT;
+int iSelectionType_CT;
+int iOneTapEnabled_CT;
+int iOneTapTimerEnabled_CT;
+int iItemAmountArray_CT[sizeof(sItems)][999];
+int iItemSelectionActive_CT;
 
-int iSelectedWeapon;
-int iSelectionType;
+int iSelectionActive_T;
+int iSelectedWeapon_T;
+int iSelectionType_T;
+int iOneTapEnabled_T;
+int iOneTapTimerEnabled_T;
+int iItemAmountArray_T[sizeof(sItems)][999];
+int iItemSelectionActive_T;
 
-bool bOneTapEnabled;
-bool bOneTapForceUnhook;
-
-int iDecoyArray[MAXPLAYERS + 1][999];
-int iSnowballArray[MAXPLAYERS + 1][999];
-int iGrenadeArray[MAXPLAYERS + 1][999];
-int iSmokeArray[MAXPLAYERS + 1][999];
-int iFlashArray[MAXPLAYERS + 1][999];
-int iTagArray[MAXPLAYERS + 1][999];
-
-int iItemAmountArray[sizeof(sItems)][999];
-
-bool bItemSelectionActive;
-bool bValidItemSelection;
-
-
-
-
+static char KVPath[64];
 
 public void OnPluginStart()
 {
+    BuildPath(Path_SM, KVPath, sizeof(KVPath), "data/test.txt");
     RegAdminCmd("wp", CMD_WP, ADMFLAG_GENERIC, "");
     RegAdminCmd("wpclear", CMD_WPClear, ADMFLAG_GENERIC, "");
     RegAdminCmd("onetap", CMD_OTap, ADMFLAG_GENERIC, "");
-    RegAdminCmd("nd", CMD_Nades, ADMFLAG_GENERIC, "");
+    RegAdminCmd("i", CMD_Nades, ADMFLAG_GENERIC, "");
     RegAdminCmd("rr", CMD_RR, ADMFLAG_GENERIC, "");
-    RegAdminCmd("t", CMD_T, ADMFLAG_GENERIC, "");
+    RegAdminCmd("s", CMD_S, ADMFLAG_GENERIC, "");
+    RegAdminCmd("l", CMD_L, ADMFLAG_GENERIC, "");
+    HookEvent("round_start", EquipPlayerItems);
+    HookEvent("round_start", EquipPlayers);
 }
 
-public Action CMD_T(int client, int args)
+//////////////////////////////// KEY VALUES SAVE & LOAD //////////////////////////////// 
+
+public Action CMD_S(int client, int args)
 {
-    int test = sizeof(sWeapons);
-    PrintToChatAll(" %i",test);
+    if(args < 1)
+    {
+        PrintToChatAll(" Usage: \x05!save <save_name>");     
+    }
+    else
+    { 
+        char sCmd[20];
+        GetCmdArg(1, sCmd, sizeof(sCmd));
+        int iItemCount = sizeof(sItems);
 
+        Handle DB = CreateKeyValues("Setting");
+        FileToKeyValues(DB, KVPath);
+
+        KvJumpToKey(DB, sCmd, true);
+        KvSetNum(DB,"iSelectionActive_CT", iSelectionActive_CT);
+        KvSetNum(DB,"iSelectedWeapon_CT", iSelectedWeapon_CT);
+        KvSetNum(DB,"iSelectionType_CT", iSelectionType_CT);
+        KvSetNum(DB,"iOneTapEnabled_CT", iOneTapEnabled_CT);
+        KvSetNum(DB,"iItemSelectionActive_CT", iItemSelectionActive_CT);
+        KvSetNum(DB,"iSelectionActive_T", iSelectionActive_T);
+        KvSetNum(DB,"iSelectedWeapon_T", iSelectedWeapon_T);
+        KvSetNum(DB,"iSelectionType_T", iSelectionType_T);
+        KvSetNum(DB,"iOneTapEnabled_T", iOneTapEnabled_T);
+        KvSetNum(DB,"iItemSelectionActive_T", iItemSelectionActive_T);
+        for (int iItemLookup = 0; iItemLookup < iItemCount; iItemLookup++)
+        {
+            KvSetNum(DB,sItems[iItemLookup][4], iItemAmountArray_CT[iItemLookup][1]);
+        }
+        for (int iItemLookup = 0; iItemLookup < iItemCount; iItemLookup++)
+        {
+            KvSetNum(DB,sItems[iItemLookup][5], iItemAmountArray_T[iItemLookup][1]);
+        }
+        KvRewind(DB);
+        KeyValuesToFile(DB, KVPath);
+        PrintToChatAll(" \x10~ \x01[\x09 SETTING \x01] \x10~ \x01[\x04 %s \x01] \x10~  \x01[\x05 SAVED \x01] \x10~",sCmd);
+        CloseHandle(DB);
+    }
 }
+
+public Action CMD_L(int client, int args)
+{
+    if(args < 1)
+    {
+       PrintToChatAll(" Usage: \x05!load <save_name>");     
+    }
+    else
+    {
+        char sCmd[20];
+        GetCmdArg(1, sCmd, sizeof(sCmd));
+
+        int iItemCount = sizeof(sItems);
+        Handle DB = CreateKeyValues("Setting");
+        FileToKeyValues(DB, KVPath);
+
+        if (KvJumpToKey(DB, sCmd))
+        {
+            iSelectionActive_CT = KvGetNum(DB,"iSelectionActive_CT");
+            iSelectedWeapon_CT = KvGetNum(DB,"iSelectedWeapon_CT");
+            iSelectionType_CT = KvGetNum(DB,"iSelectionType_CT");
+            iOneTapEnabled_CT = KvGetNum(DB,"iOneTapEnabled_CT");
+            iItemSelectionActive_CT = KvGetNum(DB,"iItemSelectionActive_CT");
+            iSelectionActive_T = KvGetNum(DB,"iSelectionActive_T");
+            iSelectedWeapon_T = KvGetNum(DB,"iSelectedWeapon_T");
+            iSelectionType_T = KvGetNum(DB,"iSelectionType_T");
+            iOneTapEnabled_T = KvGetNum(DB,"iOneTapEnabled_T");
+            iItemSelectionActive_T = KvGetNum(DB,"iItemSelectionActive_T");
+            for (int iItemLookup = 0; iItemLookup < iItemCount; iItemLookup++)
+            {
+                iItemAmountArray_CT[iItemLookup][1] = KvGetNum(DB,sItems[iItemLookup][4]);
+            }
+            for (int iItemLookup = 0; iItemLookup < iItemCount; iItemLookup++)
+            {
+                iItemAmountArray_T[iItemLookup][1] = KvGetNum(DB,sItems[iItemLookup][5]);
+            }
+            PrintToChatAll(" \x10~ \x01[\x09 SETTING \x01] \x10~ \x01[\x04 %s \x01] \x10~  \x01[\x05 LOADED \x01] \x10~",sCmd);
+            KvRewind(DB);        
+        }
+        else
+        {
+            PrintToChatAll(" \x0FERROR \x01 Can't find saved slot \x09%s",sCmd); 
+        }
+        CloseHandle(DB);
+    }
+}
+
+//////////////////////////////// RESTART ROUND //////////////////////////////// 
 
 public Action CMD_RR(int client, int args)
 {
     CS_TerminateRound(0.5, CSRoundEnd_Draw);
     PrintToChatAll("  \x01[\x05ENDING ROUND \x0BDRAW\x01] \x10~");
-
 }
+
+//////////////////////////////// ONE TAP COMMAND //////////////////////////////// 
 
 public Action CMD_OTap(int client, int args)
 {
-    if (bValidSelection == false)
-    {
-        PrintToChatAll(" \x07FAILED \x05Please choose a weapon first with \x09!wp <gun>");
-    }
-    else
-    {
-        if (bOneTapEnabled == false)
-        {
-            bOneTapEnabled = true;
-            PrintToChatAll(" \x10~ \x01[\x07GUN MODE\x01] \x10~ \x01[\x05ONE TAP MODE ENABLED \x0BNext Round!\x01] \x10~");
-        }
+    char sCmd[20];
+    GetCmdArg(1, sCmd, sizeof(sCmd));
 
-        else
+    char sCmd2[20];
+    GetCmdArg(2, sCmd2, sizeof(sCmd2));
+
+    if (StrEqual("", sCmd2))
+    {
+        sCmd2 = "all";
+    }
+
+    int iValidSelection;
+    if (StrEqual("on", sCmd))
+    {
+        if (StrEqual("all", sCmd2))
         {
-            PrintToChatAll(" \x10~ \x01[\x07GUN MODE\x01] \x10~ \x01[\x05ONE TAP MODE DISABLED \x0BNext Round!\x01] \x10~");
-            bOneTapEnabled = false;
-            bOneTapForceUnhook = true;
+            iOneTapEnabled_CT = 1;
+            iOneTapEnabled_T = 1;
+            iValidSelection = 1;
+            PrintToChatAll(" \x10~ \x01[\x09 MODE \x01] \x10~ \x01[\x04 ONE TAP \x01] \x10~  \x01[\x05 ENABLED \x01] \x10~ \x01[\x08 BOTH TEAMS \x01] \x10~");
         }
+        if (StrEqual("ct", sCmd2))
+        {
+            iOneTapEnabled_CT = 1;
+            iValidSelection = 1;
+            PrintToChatAll(" \x10~ \x01[\x09 MODE \x01] \x10~ \x01[\x04 ONE TAP \x01] \x10~  \x01[\x05 ENABLED \x01] \x10~ \x01[\x0B COUNTER-TERRORISTS \x01] \x10~");
+        }
+        if (StrEqual("t", sCmd2))
+        {
+            iOneTapEnabled_T = 1;
+            iValidSelection = 1;
+            PrintToChatAll(" \x10~ \x01[\x09 MODE \x01] \x10~ \x01[\x04 ONE TAP \x01] \x10~  \x01[\x05 ENABLED \x01] \x10~ \x01[\x0F TERRORISTS \x01] \x10~");
+        }
+    }
+
+    if (StrEqual("off", sCmd))
+    {
+        if (StrEqual("all", sCmd2))
+        {
+            iOneTapEnabled_CT = 0;
+            iOneTapEnabled_T = 0;
+            iValidSelection = 1;
+            PrintToChatAll(" \x10~ \x01[\x09 MODE \x01] \x10~ \x01[\x04 ONE TAP \x01] \x10~  \x01[\x03 DISABLED \x01] \x10~ \x01[\x08 BOTH TEAMS \x01] \x10~");
+        }
+        if (StrEqual("ct", sCmd2))
+        {
+            iOneTapEnabled_CT = 0;
+            iValidSelection = 1;
+            PrintToChatAll(" \x10~ \x01[\x09 MODE \x01] \x10~ \x01[\x04 ONE TAP \x01] \x10~  \x01[\x03 DISABLED \x01] \x10~ \x01[\x0B COUNTER-TERRORISTS \x01] \x10~");
+        }
+        if (StrEqual("t", sCmd2))
+        {
+            iOneTapEnabled_T = 0;
+            iValidSelection = 1;
+            PrintToChatAll(" \x10~ \x01[\x09 MODE \x01] \x10~ \x01[\x04 ONE TAP \x01] \x10~  \x01[\x03 DISABLED \x01] \x10~ \x01[\x0F TERRORISTS \x01] \x10~");
+        }
+    }
+
+    if (iValidSelection == 0)
+    {
+        PrintToChatAll(" \x0FERROR");
+        PrintToChatAll(" \x05!onetap <on|off> <ct|t|all>");
     }
 
 }
+
+//////////////////////////////// CLEAR VALUES COMMAND //////////////////////////////// 
 
 public Action CMD_WPClear(int client, int args)
 {
-    PrintToChatAll(" \x05Weapon selection cleared!");
-    bOneTapForceUnhook = true;
-    bSelectionActive = false;
-    bItemSelectionActive = false;
-
+    PrintToChatAll(" \x10~ \x01[\x04 SETTINGS CLEARED \x01] \x10~ ");
+    iSelectionActive_CT = 0;
+    iItemSelectionActive_CT = 0;
+    iSelectionActive_T = 0;
+    iItemSelectionActive_T = 0;
+    iOneTapEnabled_CT = 0;
+    iOneTapEnabled_T = 0;
+    iSelectedWeapon_CT = 0;
+    iSelectedWeapon_T = 0;
+    iSelectionType_CT = 0;
+    iSelectionType_T = 0;
     int iItemCount = sizeof(sItems);
     for (int iItemLookup = 0; iItemLookup < iItemCount; iItemLookup++)
     {
-        iItemAmountArray[iItemLookup][1] = 0;
+        iItemAmountArray_CT[iItemLookup][1] = 0;
 
     }
-
+    for (int iItemLookup = 0; iItemLookup < iItemCount; iItemLookup++)
+    {
+        iItemAmountArray_T[iItemLookup][1] = 0;
+    }
 }
+
+//////////////////////////////// CLEAR VALUES ON MAP START //////////////////////////////// 
 
 public void OnMapStart()
 {
-    bOneTapForceUnhook = true;
-    bSelectionActive = false;
-    bItemSelectionActive = false;
-
+    iSelectionActive_CT = 0;
+    iItemSelectionActive_CT = 0;
+    iSelectionActive_T = 0;
+    iItemSelectionActive_T = 0;
+    iOneTapEnabled_CT = 0;
+    iOneTapEnabled_T = 0;
+    iSelectedWeapon_CT = 0;
+    iSelectedWeapon_T = 0;
+    iSelectionType_CT = 0;
+    iSelectionType_T = 0;
     int iItemCount = sizeof(sItems);
     for (int iItemLookup = 0; iItemLookup < iItemCount; iItemLookup++)
     {
-        iItemAmountArray[iItemLookup][1] = 0;
+        iItemAmountArray_CT[iItemLookup][1] = 0;
 
     }
+    for (int iItemLookup = 0; iItemLookup < iItemCount; iItemLookup++)
+    {
+        iItemAmountArray_T[iItemLookup][1] = 0;
+    }
 }
+
+//////////////////////////////// EQUIP WEAPONS COMMAND //////////////////////////////// 
 
 public Action CMD_WP(int client, int args)
 {
     char sCmd[20];
     GetCmdArg(1, sCmd, sizeof(sCmd));
+
+    char sCmd2[20];
+    GetCmdArg(2, sCmd2, sizeof(sCmd2));
+
+    if (StrEqual("", sCmd2))
+    {
+        sCmd2 = "all";
+    }
+
     int iWeaponCount = sizeof(sWeapons);
+    int iValidSelection;
 
     if (StrEqual("randomeach",sCmd))
     {
-        iSelectionType = 2;
-        bSelectionActive = true;
-        HookEvent("round_start", EquipPlayers);
-        PrintToChatAll(" \x10~ \x01[\x07GUN MODE\x01] \x10~ \x01[\x05RANDOM GUN EACH \x0BNext Round!\x01] \x10~");
+        if (StrEqual("all", sCmd2))
+        {
+            iSelectionType_CT = 2;
+            iSelectionActive_CT = 1;
+            iSelectionType_T = 2;
+            iSelectionActive_T = 1;
+            PrintToChatAll(" \x10~ \x01[\x09 WEAPON \x01] \x10~ \x01[\x04 RANDOM GUN EACH \x01] \x10~ \x01[\x08 BOTH TEAMS \x01] \x10~");
+        }
+        if (StrEqual("ct", sCmd2))
+        {
+            iSelectionType_CT = 2;
+            iSelectionActive_CT = 1;
+            PrintToChatAll(" \x10~ \x01[\x09 WEAPON \x01] \x10~ \x01[\x04 RANDOM GUN EACH \x01] \x10~ \x01[\x0B COUNTER-TERRORISTS \x01] \x10~");
+        }
+        if (StrEqual("t", sCmd2))
+        {
+            iSelectionType_T = 2;
+            iSelectionActive_T = 1;
+            PrintToChatAll(" \x10~ \x01[\x09 WEAPON \x01] \x10~ \x01[\x04 RANDOM GUN EACH \x01] \x10~ \x01[\x0F TERRORISTS \x01] \x10~");
+        }
     }
 
     else
@@ -189,10 +373,26 @@ public Action CMD_WP(int client, int args)
 
     if (StrEqual("randomall",sCmd))
     {
-        iSelectionType = 3;
-        bSelectionActive = true;
-        HookEvent("round_start", EquipPlayers);
-        PrintToChatAll(" \x10~ \x01[\x07GUN MODE\x01] \x10~ \x01[\x05RANDOM GUN ALL \x0BNext Round!\x01] \x10~");
+        if (StrEqual("all", sCmd2))
+        {
+            iSelectionType_CT = 3;
+            iSelectionActive_CT = 1;
+            iSelectionType_T = 3;
+            iSelectionActive_T = 1;
+            PrintToChatAll(" \x10~ \x01[\x09 WEAPON \x01] \x10~ \x01[\x04 RANDOM GUN ALL \x01] \x10~ \x01[\x08 BOTH TEAMS \x01] \x10~");
+        }
+        if (StrEqual("ct", sCmd2))
+        {
+            iSelectionType_CT = 3;
+            iSelectionActive_CT = 1;
+            PrintToChatAll(" \x10~ \x01[\x09 WEAPON \x01] \x10~ \x01[\x04 RANDOM GUN ALL \x01] \x10~ \x01[\x0B COUNTER-TERRORISTS \x01] \x10~");
+        }
+        if (StrEqual("t", sCmd2))
+        {
+            iSelectionType_T = 3;
+            iSelectionActive_T = 1;
+            PrintToChatAll(" \x10~ \x01[\x09 WEAPON \x01] \x10~ \x01[\x04 RANDOM GUN ALL \x01] \x10~ \x01[\x0F TERRORISTS \x01] \x10~");
+        }
     }
 
     else
@@ -203,40 +403,67 @@ public Action CMD_WP(int client, int args)
     {
         if (StrEqual(sWeapons[iWeaponLookup][2], sCmd))
         {
-            PrintToChatAll(" \x10~ \x01[\x07GUN MODE\x01] \x10~ \x01[\x05%s \x0BNext Round!\x01] \x10~", sWeapons[iWeaponLookup][1]);
-            iSelectedWeapon = iWeaponLookup;
-            iSelectionType = 1;
-            bSelectionActive = true;
-            bValidSelection = true;
-            HookEvent("round_start", EquipPlayers);
+            if (StrEqual("all", sCmd2))
+            {
+            PrintToChatAll(" \x10~ \x01[\x09 WEAPON \x01] \x10~ \x01[\x04 %s \x01] \x10~ \x01[\x08 BOTH TEAMS \x01] \x10~", sWeapons[iWeaponLookup][1]);
+            iSelectedWeapon_CT = iWeaponLookup;
+            iSelectionType_CT = 1;
+            iSelectionActive_CT = 1;
+            iValidSelection = 1;
+            iSelectedWeapon_T = iWeaponLookup;
+            iSelectionType_T = 1;
+            iSelectionActive_T = 1;
+            iValidSelection = 1;
+            }
+            if (StrEqual("ct", sCmd2))
+            {
+            PrintToChatAll(" \x10~ \x01[\x09 WEAPON \x01] \x10~ \x01[\x04 %s \x01] \x10~ \x01[\x0B COUNTER-TERRORISTS \x01] \x10~", sWeapons[iWeaponLookup][1]);
+            iSelectedWeapon_CT = iWeaponLookup;
+            iSelectionType_CT = 1;
+            iSelectionActive_CT = 1;
+            iValidSelection = 1;
+            }
+            if (StrEqual("t", sCmd2))
+            {
+            PrintToChatAll(" \x10~ \x01[\x09 WEAPON \x01] \x10~ \x01[\x04 %s \x01] \x10~ \x01[\x0F TERRORISTS \x01] \x10~", sWeapons[iWeaponLookup][1]);
+            iSelectedWeapon_T = iWeaponLookup;
+            iSelectionType_T = 1;
+            iSelectionActive_T = 1;
+            iValidSelection = 1;
+            }
         }
     }
 
-    if (bValidSelection == false)
+    if (iValidSelection == 0)
     {
-        PrintToChatAll(" \x07Cannot find \x09%s", sCmd);
-        PrintToChatAll(" Usage: \x08!wp <gun>\x01 - \x05awp, scout, ak, m4, m4s, sg, aug, deag, usp, glock, galil, famas, mac10, mp9, mp7, ump, bizon, p90, mp5, m249, mag7, negev, nova, shorty, xm, 57, dualies, p250, tec9, cz, r8, p2000, \x01 OR \x09randomeach, randomall");
+        PrintToChatAll(" \x0FERROR \x01 Can't find \x09 %s",sCmd);
+        PrintToChatAll(" \x05!wp <weapon> <all/ct/t> \x01 [\x08awp, scout, ak, m4, m4s, sg, aug, deag, usp, glock, galil, famas, mac10, mp9, mp7, ump, bizon, p90, mp5, m249, mag7, negev, nova, shorty, xm, 57, dualies, p250, tec9, cz, r8, p2000\x01]");
  
     }
+    iValidSelection = 0;
     }
     }
 }
 
+//////////////////////////////// HOOK WEAPON EQUIP //////////////////////////////// 
+
 public void EquipPlayers(Event event, const char[] name, bool dontBroadcast)
 {
-    if (bSelectionActive == false)
-    {
-        // Do Nothing
-    }
-
-    else 
-    {
     int iRandom = GetRandomInt(0,sizeof(sWeapons) - 1);
+
+    iOneTapTimerEnabled_T = 0;
+    iOneTapTimerEnabled_CT = 0;
   
     for (int iClient = 1; iClient <= MaxClients; iClient++)
     {
-        if (IsClientConnected(iClient) && IsClientInGame(iClient))
+        // Counter Terrorists
+        if (IsClientConnected(iClient) && IsClientInGame(iClient) && GetClientTeam(iClient) == CS_TEAM_CT && iSelectionActive_CT == 1)
         {
+            if (iOneTapEnabled_CT == 1)
+            {
+                iOneTapTimerEnabled_CT = 1;
+                CreateTimer(0.5, OneTapMode_CT, iClient, TIMER_REPEAT);
+            }
             // Iterate though primary and secondary weapon slots (0=Primary, 1=Secondary, 2=Knife, 3=Grenade, 4=C4)
             for (int iSlot = 0; iSlot < 2; iSlot++)
             {
@@ -253,21 +480,20 @@ public void EquipPlayers(Event event, const char[] name, bool dontBroadcast)
                 }
             }
 
-            if  (iSelectionType == 1)
+            if  (iSelectionType_CT == 1)
             {
-                if (bOneTapEnabled == true)
+                if (iOneTapEnabled_CT == 1)
                 {
-                    Client_GiveWeaponAndAmmo(iClient, sWeapons[iSelectedWeapon][0], _, 0, _, 1);
+                    Client_GiveWeaponAndAmmo(iClient, sWeapons[iSelectedWeapon_CT][0], _, 0, _, 1);
                 }
                 else
                 {
-                    GivePlayerItem(iClient, sWeapons[iSelectedWeapon][0], 0);
- //                   GivePlayerItem(iClient, "item_defuser", 0);
+                    GivePlayerItem(iClient, sWeapons[iSelectedWeapon_CT][0], 0);
                 }
                 
                 SetEntProp(iClient, Prop_Data, "m_ArmorValue", 100, 1);
 
-                if (StrEqual(sWeapons[iSelectedWeapon][3], "0"))
+                if (StrEqual(sWeapons[iSelectedWeapon_CT][3], "0"))
                 {
                     SetEntProp(iClient, Prop_Send, "m_bHasHelmet", 0);
                 }
@@ -278,9 +504,9 @@ public void EquipPlayers(Event event, const char[] name, bool dontBroadcast)
                 }
             }
 
-            if  (iSelectionType == 2)
+            if  (iSelectionType_CT == 2)
             {
-                if (bOneTapEnabled == true)
+                if (iOneTapEnabled_CT == 1)
                 {
                     Client_GiveWeaponAndAmmo(iClient, sWeapons[GetRandomInt(0,sizeof(sWeapons) - 1)][0], _, 0, _, 1);
                 }
@@ -293,9 +519,9 @@ public void EquipPlayers(Event event, const char[] name, bool dontBroadcast)
                 SetEntProp(iClient, Prop_Send, "m_bHasHelmet", 1);
             }
 
-            if  (iSelectionType == 3)
+            if  (iSelectionType_CT == 3)
             {
-                if (bOneTapEnabled == true)
+                if (iOneTapEnabled_CT == 1)
                 {
                     Client_GiveWeaponAndAmmo(iClient, sWeapons[iRandom][0], _, 0, _, 1);
                 }
@@ -316,210 +542,317 @@ public void EquipPlayers(Event event, const char[] name, bool dontBroadcast)
                 }
             }
         }
-    }
+        // Terrorists
+        else
+        {
+        if (IsClientConnected(iClient) && IsClientInGame(iClient) && GetClientTeam(iClient) == CS_TEAM_T && iSelectionActive_T == 1)
+        {
 
-    if (bOneTapEnabled == true)
-    {
-        HookEvent("weapon_fire", EventOTap);
-        bOneTapForceUnhook = false;
+            if (iOneTapEnabled_T == 1)
+            {
+                iOneTapTimerEnabled_T = 1;
+                CreateTimer(0.5, OneTapMode_T, iClient, TIMER_REPEAT);
+            }
+            // Iterate though primary and secondary weapon slots (0=Primary, 1=Secondary, 2=Knife, 3=Grenade, 4=C4)
+            for (int iSlot = 0; iSlot < 2; iSlot++)
+            {
+                int iEntity;
 
-    }
-    else
-    {
-        UnhookEvent("weapon_fire", EventOTap);
-        bOneTapForceUnhook = true;
-    } 
-    }
+                // Grab the entity value for every valid client and every non-empty weapon slot
+
+                while ((iEntity = GetPlayerWeaponSlot(iClient, iSlot)) != -1)
+                {
+                    // Remove that entity from the client then kill it
+
+                    RemovePlayerItem(iClient, iEntity);
+                    AcceptEntityInput(iEntity, "Kill");
+                }
+            }
+
+            if  (iSelectionType_T == 1)
+            {
+                if (iOneTapEnabled_T == 1)
+                {
+                    Client_GiveWeaponAndAmmo(iClient, sWeapons[iSelectedWeapon_T][0], _, 0, _, 1);
+                }
+                else
+                {
+                    GivePlayerItem(iClient, sWeapons[iSelectedWeapon_T][0], 0);
+                }
+                
+                SetEntProp(iClient, Prop_Data, "m_ArmorValue", 100, 1);
+
+                if (StrEqual(sWeapons[iSelectedWeapon_T][3], "0"))
+                {
+                    SetEntProp(iClient, Prop_Send, "m_bHasHelmet", 0);
+                }
+
+                else
+                {
+                    SetEntProp(iClient, Prop_Send, "m_bHasHelmet", 1);
+                }
+            }
+
+            if  (iSelectionType_T == 2)
+            {
+                if (iOneTapEnabled_T == 1)
+                {
+                    Client_GiveWeaponAndAmmo(iClient, sWeapons[GetRandomInt(0,sizeof(sWeapons) - 1)][0], _, 0, _, 1);
+                }
+                else
+                {
+                    GivePlayerItem(iClient, sWeapons[GetRandomInt(0,sizeof(sWeapons) - 1)][0], 0);
+                }
+                
+                SetEntProp(iClient, Prop_Data, "m_ArmorValue", 100, 1);
+                SetEntProp(iClient, Prop_Send, "m_bHasHelmet", 1);
+            }
+
+            if  (iSelectionType_T == 3)
+            {
+                if (iOneTapEnabled_T == 1)
+                {
+                    Client_GiveWeaponAndAmmo(iClient, sWeapons[iRandom][0], _, 0, _, 1);
+                }
+                else
+                {
+                    GivePlayerItem(iClient, sWeapons[iRandom][0], 0);
+                }
+                SetEntProp(iClient, Prop_Data, "m_ArmorValue", 100, 1);
+
+                if (StrEqual(sWeapons[iRandom][3], "0"))
+                {
+                    SetEntProp(iClient, Prop_Send, "m_bHasHelmet", 0);
+                }
+                else
+                {
+                    SetEntProp(iClient, Prop_Send, "m_bHasHelmet", 1);
+                }
+            }
+        }
+        }
+    }    
 }
 
-public void EventOTap(Event event, const char[] name, bool dontBroadcast)
+//////////////////////////////// HOOK ADDITIONAL MODES //////////////////////////////// 
+
+public void HookAdditionalModes(Event event, const char[] name, bool dontBroadcast)
 {
-    if (bOneTapForceUnhook == false)
-    {
-        int iUserID = GetEventInt(event, "userid");
-        int iClient = GetClientOfUserId(iUserID);        
-        CreateTimer(0.2, GiveAmmo, iClient);         
-    }
-      
 }
 
-public Action GiveAmmo(Handle timer, any client)
-{      
+public Action OneTapMode_CT(Handle timer, any client)
+{   
+    if (iOneTapTimerEnabled_CT == 0)
+    {    
+        return Plugin_Stop;
+    } 
+
     for (int iSlot = 0; iSlot < 2; iSlot++)
     {
         int iEntity;
         if ((iEntity = GetPlayerWeaponSlot(client, iSlot)) != -1)
         {
-            char sWeapon[64];
-            GetEntityClassname(iEntity, sWeapon, sizeof(sWeapon)); 
- //           Client_GiveWeaponAndAmmo(client, sWeapon, _, 0, _, 1);  
-            Client_SetWeaponPlayerAmmo(client, sWeapon, 1);
-            Client_SetWeaponClipAmmo(client, sWeapon, 0);
+            int clip1 = GetEntProp(iEntity, Prop_Send, "m_iClip1");
+            if (clip1 == 0) 
+            {
+                char sWeapon[64];
+                GetEntityClassname(iEntity, sWeapon, sizeof(sWeapon)); 
+                Client_SetWeaponPlayerAmmo(client, sWeapon, 1);
+            }
         }
     }
-}  
+    return Plugin_Continue;
+}
+
+public Action OneTapMode_T(Handle timer, any client)
+{   
+    if (iOneTapTimerEnabled_T == 0)
+    {    
+        return Plugin_Stop;
+    } 
+
+    for (int iSlot = 0; iSlot < 2; iSlot++)
+    {
+        int iEntity;
+        if ((iEntity = GetPlayerWeaponSlot(client, iSlot)) != -1)
+        {
+            int clip1 = GetEntProp(iEntity, Prop_Send, "m_iClip1");
+            if (clip1 == 0) 
+            {
+                char sWeapon[64];
+                GetEntityClassname(iEntity, sWeapon, sizeof(sWeapon)); 
+                Client_SetWeaponPlayerAmmo(client, sWeapon, 1);
+            }
+        }
+    }
+    return Plugin_Continue;
+}
+
+//////////////////////////////// EQUIP ITEMS COMMAND //////////////////////////////// 
 
 public Action CMD_Nades(int client, int args)
 {
     if(args < 1)
     {
-       PrintToChatAll(" Usage: \x08!item <item> <amount>\x01 - \x05grenade, smoke, flash, decoy, charge, mine, tag, snowball, \x01 OR \x09randomeach, randomall");     
+       PrintToChatAll(" Usage: \x05!item <item> <amount> <all|ct|t> \x01 [\x08grenade, smoke, flash, decoy, charge, mine, tag, snowball, shield, defuser\x01]");     
     }
     else
-    {
-    ServerCommand("ammo_grenade_limit_breachcharge 999; ammo_grenade_limit_bumpmine 999; ammo_grenade_limit_default 999; ammo_grenade_limit_flashbang 999; ammo_grenade_limit_snowballs 999; ammo_grenade_limit_total 9999; ammo_item_limit_healthshot 999");     
-    char sCmd[20];
-    GetCmdArg(1, sCmd, sizeof(sCmd));
-    char sCmd2[10];
-    GetCmdArg(2, sCmd2,sizeof(sCmd2));
-    int iAmount = StringToInt(sCmd2);
-    if (iAmount > 250)
-    {
-        iAmount = 250;
-    }
-    int iItemCount = sizeof(sItems);
-    for (int iItemLookup = 0; iItemLookup < iItemCount; iItemLookup++)
-    {
-        if (StrEqual(sItems[iItemLookup][2], sCmd))
+    { 
+        int iAmount;
+        int iValidItemSelection;
+        ServerCommand("ammo_grenade_limit_breachcharge 999; ammo_grenade_limit_bumpmine 999; ammo_grenade_limit_default 999; ammo_grenade_limit_flashbang 999; ammo_grenade_limit_snowballs 999; ammo_grenade_limit_total 99999; ammo_item_limit_healthshot 999");     
+        char sCmd[20];
+        GetCmdArg(1, sCmd, sizeof(sCmd));
+        char sCmd2[10];
+        GetCmdArg(2, sCmd2,sizeof(sCmd2));
+        char sCmd3[10];
+        GetCmdArg(3, sCmd3,sizeof(sCmd3));
+
+        if (StrEqual("", sCmd3))
         {
-            PrintToChatAll(" \x10~ \x01[\x07ITEM MODE\x01] \x10~ \x01[\x09%i \x05%s \x0BNext Round!\x01] \x10~", iAmount, sItems[iItemLookup][1]);
-            iItemAmountArray[iItemLookup][1] = iAmount;
-            bItemSelectionActive = true;
-            bValidItemSelection = true;
-
-            HookEvent("round_start", EquipPlayerItems);
+            sCmd3 = "all";
         }
-    }
 
-    if (bValidItemSelection == false)
-    {
-        PrintToChatAll(" \x07Cannot find \x09%s", sCmd);
-        PrintToChatAll(" Usage: \x08!item <item> <amount>\x01 - \x05grenade, smoke, flash, decoy, charge, mine, tag, snowball, \x01 OR \x09randomeach, randomall");
- 
-    }
+        if (StrEqual("", sCmd2))
+        {
+            iAmount = 1;
+        }
+        else
+        {
+            iAmount = StringToInt(sCmd2);
+        }
+
+        if (iAmount > 999)
+        {
+            iAmount = 999;
+        }
+        int iItemCount = sizeof(sItems);
+        for (int iItemLookup = 0; iItemLookup < iItemCount; iItemLookup++)
+        {
+            if (StrEqual(sItems[iItemLookup][2], sCmd))
+            {
+                if (StrEqual("all", sCmd3))
+                {
+                    iItemAmountArray_CT[iItemLookup][1] = iAmount;
+                    iItemSelectionActive_CT = 1;
+                    iItemAmountArray_T[iItemLookup][1] = iAmount;
+                    iItemSelectionActive_T = 1;
+                    iValidItemSelection = 1;
+                    PrintToChatAll(" \x10~ \x01[\x09 ITEM \x01] \x10~ \x01[\x01 %i \x04 %s \x01] \x10~ \x01[\x08 BOTH TEAMS \x01] \x10~", iAmount, sItems[iItemLookup][1]);
+                }
+                if (StrEqual("ct", sCmd3))
+                {
+                    iItemAmountArray_CT[iItemLookup][1] = iAmount;
+                    iItemSelectionActive_CT = 1;
+                    iValidItemSelection = 1;
+                    PrintToChatAll(" \x10~ \x01[\x09 ITEM \x01] \x10~ \x01[\x01 %i \x04 %s \x01] \x10~ \x01[\x0B COUNTER-TERRORISTS \x01] \x10~", iAmount, sItems[iItemLookup][1]);
+                }
+                if (StrEqual("t", sCmd3))
+                {
+                    iItemAmountArray_T[iItemLookup][1] = iAmount;
+                    iItemSelectionActive_T = 1;
+                    iValidItemSelection = 1;
+                    PrintToChatAll(" \x10~ \x01[\x09 ITEM \x01] \x10~ \x01[\x01 %i \x04 %s \x01] \x10~ \x01[\x0F TERRORISTS \x01] \x10~", iAmount, sItems[iItemLookup][1]);
+                }
+            }
+        }
+
+        if (iValidItemSelection == 0)
+        {
+            PrintToChatAll(" \x0FERROR \x01 Can't find \x09 %s",sCmd);
+            PrintToChatAll(" \x05!item <item> <amount> <all|ct|t> \x01 [\x08grenade, smoke, flash, decoy, charge, mine, tag, snowball, shield, defuser\x01]");
+        }
+        iValidItemSelection = 0;
     }
 }
+
+//////////////////////////////// HOOK ITEM EQUIP //////////////////////////////// 
 
 public void EquipPlayerItems(Event event, const char[] name, bool dontBroadcast)
 {
-    if (bItemSelectionActive == false)
-    {
-        // Do Nothing
-    }
-    else
-    {
     for (int iClient = 1; iClient <= MaxClients; iClient++)
     {
-        if (IsClientConnected(iClient) && IsClientInGame(iClient))
+        if (IsClientConnected(iClient) && IsClientInGame(iClient) && GetClientTeam(iClient) == CS_TEAM_CT && iItemSelectionActive_CT == 1)
         {
             int iItemCount = sizeof(sItems);
+            SetEntProp(iClient, Prop_Send, "m_bHasDefuser", 0);
             for (int iItemLookup = 0; iItemLookup < iItemCount; iItemLookup++)
             {
                 Client_RemoveWeapon(iClient, sItems[iItemLookup][0]);
+                if (iItemAmountArray_CT[iItemLookup][1] == 0 )
+                {
+                    // Do Noithing
+                }
+                else
+                {
+                    if (StrEqual("no_offset",sItems[iItemLookup][3]))
+                    {
+                        Client_GiveWeaponAndAmmo(iClient, sItems[iItemLookup][0], _, 0, _, iItemAmountArray_CT[iItemLookup][1]);
+                    }
+                    else
+                    {
+                        if (StrEqual("single_item",sItems[iItemLookup][3]))
+                        {
+                            GivePlayerItem(iClient, sItems[iItemLookup][0], 0);                   
+                        } 
+                        else
+                        {
+                            if (StrEqual("defuser_item",sItems[iItemLookup][3]))
+                            {
+                                SetEntProp(iClient, Prop_Send, "m_bHasDefuser", 1);
+                            }
+                            else
+                            {
+                                GivePlayerItem(iClient, sItems[iItemLookup][0], 0);
+                                SetEntProp(iClient, Prop_Send, "m_iAmmo", iItemAmountArray_CT[iItemLookup][1], _, StringToInt(sItems[iItemLookup][3]));                                  
+                            }                      
+                        }                       
+                    }                 
+                }
             }
-            if (iItemAmountArray[7][1] == 0)
+        }
+        else
+        {
+        if (IsClientConnected(iClient) && IsClientInGame(iClient) && GetClientTeam(iClient) == CS_TEAM_T && iItemSelectionActive_T == 1)
+        {
+            int iItemCount = sizeof(sItems);
+            SetEntProp(iClient, Prop_Send, "m_bHasDefuser", 0);
+            for (int iItemLookup = 0; iItemLookup < iItemCount; iItemLookup++)
             {
-                // Do Nothing
+                Client_RemoveWeapon(iClient, sItems[iItemLookup][0]);
+                if (iItemAmountArray_T[iItemLookup][1] == 0 )
+                {
+                    // Do Noithing
+                }
+                else
+                {
+                    if (StrEqual("no_offset",sItems[iItemLookup][3]))
+                    {
+                        Client_GiveWeaponAndAmmo(iClient, sItems[iItemLookup][0], _, 0, _, iItemAmountArray_T[iItemLookup][1]);
+                    }
+                    else
+                    {
+                        if (StrEqual("single_item",sItems[iItemLookup][3]))
+                        {
+                            GivePlayerItem(iClient, sItems[iItemLookup][0], 0);                   
+                        } 
+                        else
+                        {
+                            if (StrEqual("defuser_item",sItems[iItemLookup][3]))
+                            {
+                                SetEntProp(iClient, Prop_Send, "m_bHasDefuser", 1);
+                            }
+                            else
+                            {
+                                GivePlayerItem(iClient, sItems[iItemLookup][0], 0);
+                                SetEntProp(iClient, Prop_Send, "m_iAmmo", iItemAmountArray_T[iItemLookup][1], _, StringToInt(sItems[iItemLookup][3]));                                  
+                            }                      
+                        }                       
+                    }                 
+                }
             }
-            else
-            {
-                Client_GiveWeaponAndAmmo(iClient, "weapon_bumpmine", _, 0, _, iItemAmountArray[7][1]);                
-            }
-            if (iItemAmountArray[6][1] == 0)
-            {
-                // Do Nothing
-            }
-            else
-            {
-                Client_GiveWeaponAndAmmo(iClient, "weapon_breachcharge", _, 0, _, iItemAmountArray[6][1]);               
-            }
-            iDecoyArray[iClient][1] = 0;
-            CreateTimer(0.1, GiveDecoys, iClient, TIMER_REPEAT);
-            iSnowballArray[iClient][1] = 0;
-            CreateTimer(0.1, GiveSnowballs, iClient, TIMER_REPEAT);
-            iGrenadeArray[iClient][1] = 0;
-            CreateTimer(0.1, GiveGrenades, iClient, TIMER_REPEAT); 
-            iFlashArray[iClient][1] = 0;
-            CreateTimer(0.1, GiveFlashes, iClient, TIMER_REPEAT);
-            iSmokeArray[iClient][1] = 0;
-            CreateTimer(0.1, GiveSmokes, iClient, TIMER_REPEAT);
-            iTagArray[iClient][1] = 0;
-            CreateTimer(0.1, GiveTags, iClient, TIMER_REPEAT);   
+        }
         }
     }
-    }
 }
-
-
-public Action GiveDecoys(Handle timer, any client)
-{   
-    if (iDecoyArray[client][1] == iItemAmountArray[5][1])
-    {    
-        return Plugin_Stop;
-    }
-    if (bItemSelectionActive == false)
-    {    
-        return Plugin_Stop;
-    }
-    GivePlayerItem(client, "weapon_decoy", 0);
-    iDecoyArray[client][1] ++;
-    return Plugin_Continue;
-}  
-
-public Action GiveSnowballs(Handle timer, any client)
-{   
-    if (iSnowballArray[client][1] == iItemAmountArray[0][1])
-    {    
-        return Plugin_Stop;
-    }
-    GivePlayerItem(client, "weapon_snowball", 0);
-    iSnowballArray[client][1] ++;
-    return Plugin_Continue;
-}  
-
-public Action GiveGrenades(Handle timer, any client)
-{   
-    if (iGrenadeArray[client][1] == iItemAmountArray[1][1])
-    {    
-        return Plugin_Stop;
-    }
-    GivePlayerItem(client, "weapon_hegrenade", 0);
-    iGrenadeArray[client][1] ++;
-    return Plugin_Continue;
-}  
-
-public Action GiveFlashes(Handle timer, any client)
-{   
-    if (iFlashArray[client][1] == iItemAmountArray[3][1])
-    {    
-        return Plugin_Stop;
-    }
-    GivePlayerItem(client, "weapon_flashbang", 0);
-    iFlashArray[client][1] ++;
-    return Plugin_Continue;
-}  
-
-
-public Action GiveSmokes(Handle timer, any client)
-{   
-    if (iSmokeArray[client][1] == iItemAmountArray[2][1])
-    {    
-        return Plugin_Stop;
-    }
-    GivePlayerItem(client, "weapon_smokegrenade", 0);
-    iSmokeArray[client][1] ++;
-    return Plugin_Continue;
-}  
-
-
-public Action GiveTags(Handle timer, any client)
-{   
-    if (iTagArray[client][1] == iItemAmountArray[4][1])
-    {    
-        return Plugin_Stop;
-    }
-    GivePlayerItem(client, "weapon_tagrenade", 0);
-    iTagArray[client][1] ++;
-    return Plugin_Continue;
-}  
 
