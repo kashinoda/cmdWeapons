@@ -1,10 +1,12 @@
-# EzWeapons
+# cmdWeapons
 
-Simple plugin that sets the spawn weapons for the entire server.
+Simple plugin that sets the spawn weapons/items.
 
 Usage:
 
-!wp **[weapon shortcode]** - *Set spawn weapon* <br>
+**!wp {weapon_shortcode} {ct|t|all}** - *Set Weapon* <br>
+**!item {item_shortcode} {amount} {ct|t|all}** - *Set item(s)* <br>
+**!onetap {on/off} {ct|t|all}** - *Enable one-tap mode (clip capacity 1)* <br>
 !wplist - *Print all shortcodes to chat* <br>
 !wpclear - *Remove spawn weapons*
 
