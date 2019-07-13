@@ -5,7 +5,7 @@ Simple plugin that sets the spawn weapons/items.
 Usage
 
 Admin commands:
-
+**Weapons and Item Commands**<br><br>
 **!wp {weapon_shortcode} {ct/t/all}** - *Set Weapon* <br>
 **!item {item_shortcode} {amount} {ct/t/all}** - *Set item(s)*  <br>
 **!onetap {on/off} {ct/t/all}** - *Enable one-tap mode (clip capacity 1)*  <br>
@@ -15,10 +15,12 @@ Admin commands:
 **!clear** - "*Clear all settings*  <br>
 **!rr** - *Restart Round* <br>
 <br>
-**!save {save_name}** - *Save all current settings to a slot* <br>
-**!load {save_name}** - *Load existing settings from a slot* <br>
-**!delete {save_name}** - *Delete an existing save slot* <br>
-**!update {save_name}** - *Update an existing save slot* <br>
+**Save your config**
+<br>
+**!save {save_name}** - *Save all current settings* <br>
+**!load {save_name}** - *Load existing settings* <br>
+**!delete {save_name}** - *Delete an existing slot* <br>
+**!update {save_name}** - *Update an existing slot* <br>
 <br>
 **Custom Settings**
 
