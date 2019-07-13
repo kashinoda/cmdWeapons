@@ -4,7 +4,7 @@ Simple plugin that sets the spawn weapons/items.
 
 Usage
 <br>
-Admin commands: <br>
+# Admin commands: <br>
 ----
 **Weapons and Item Commands**<br><br>
 **!wp {weapon_shortcode} {ct/t/all}** - *Set Weapon* <br>
@@ -12,6 +12,9 @@ Admin commands: <br>
 **!onetap {on/off} {ct/t/all}** - *Enable one-tap mode (clip capacity 1)*  <br>
 **!hp {amount} {ct/t/all}** - *Set the amount of health a player spawns with*  <br>
 <br>
+<br>
+# Useful Commands <br>
+---- <br>
 **!flip** - *Switch settings for both sides*  <br>
 **!clear** - "*Clear all settings*  <br>
 **!rr** - *Restart Round* <br>
