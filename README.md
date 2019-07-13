@@ -3,7 +3,7 @@
 Simple plugin that sets the spawn weapons/items.
 
 Usage (Admin Commands):<br><br>
-#### Weapons and Item Commands<br>
+### Weapons and Item Commands<br>
 **!wp {weapon_shortcode} {ct/t/all}** - *Set Weapon* <br>
 **!item {item_shortcode} {amount} {ct/t/all}** - *Set item(s)*  <br>
 **!onetap {on/off} {ct/t/all}** - *Enable one-tap mode (clip capacity 1)*  <br>
