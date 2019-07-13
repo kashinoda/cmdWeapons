@@ -14,7 +14,7 @@ Admin flag only, if team choice is admitted 'all' will be used.
 ### Useful Commands <br>
 ---
 **!flip** - *Switch settings for both sides*  <br>
-**!clear** - "*Clear all settings*  <br>
+**!clear** - *Clear all settings*  <br>
 **!rr** - *Restart Round* <br>
 ### Save your config <br>
 ----
