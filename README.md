@@ -3,8 +3,9 @@
 Simple plugin that sets the spawn weapons/items.
 
 Usage
-
-Admin commands:
+<br>
+Admin commands: <br>
+----
 **Weapons and Item Commands**<br><br>
 **!wp {weapon_shortcode} {ct/t/all}** - *Set Weapon* <br>
 **!item {item_shortcode} {amount} {ct/t/all}** - *Set item(s)*  <br>
