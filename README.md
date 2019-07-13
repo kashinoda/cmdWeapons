@@ -2,15 +2,13 @@
 
 Simple plugin that sets the spawn weapons/items.
 
-Usage
-<br>
-Admin commands: <br>
-**Weapons and Item Commands**<br><br>
+Usage (Admin Commands):
+<br><br>
+**Weapons and Item Commands**<br>
 **!wp {weapon_shortcode} {ct/t/all}** - *Set Weapon* <br>
 **!item {item_shortcode} {amount} {ct/t/all}** - *Set item(s)*  <br>
 **!onetap {on/off} {ct/t/all}** - *Enable one-tap mode (clip capacity 1)*  <br>
 **!hp {amount} {ct/t/all}** - *Set the amount of health a player spawns with*  <br>
-<br>
 <br>
 Useful Commands <br>
 **!flip** - *Switch settings for both sides*  <br>
@@ -18,14 +16,12 @@ Useful Commands <br>
 **!rr** - *Restart Round* <br>
 <br>
 **Save your config**
-<br>
 **!save {save_name}** - *Save all current settings* <br>
 **!load {save_name}** - *Load existing settings* <br>
 **!delete {save_name}** - *Delete an existing slot* <br>
 **!update {save_name}** - *Update an existing slot* <br>
 <br>
-**Custom Settings**
-
+**Custom Settings** <br>
 **!rcon_save {save_name} {console commands}** - *Save custom console commands* <br>
 **!rcon_load {save_name}** - *Load and execute custom console commands* <br>
 **!rcon_delete {save_name}** - *Delete an existing slot* <br>
