@@ -26,10 +26,10 @@ Admin flag only, if team choice is admitted 'all' will be used.
 ---
 <br>
 Save your own console commands and execute them at any time, you must remember to wrap the commands in quotation marks, i.e:<br>
-*!rcon_save bunnyhop "sv_cheats 1; sv_enablebunnyhopping 1; sv_autobunnyhopping 1"*<br><br>
-
+!rcon_save bunnyhop "sv_cheats 1; sv_enablebunnyhopping 1; sv_autobunnyhopping 1"
+<br>
 If your commands are too long for the chat box, enter it via the console instead omitting the !, i.e:<br>
-*rcon_save bunnyhop "sv_cheats 1; sv_enablebunnyhopping 1; sv_autobunnyhopping 1"*<br><br>
+rcon_save bunnyhop "sv_cheats 1; sv_enablebunnyhopping 1; sv_autobunnyhopping 1"<br><br>
 
 **!rcon_save {save_name} {console commands}** - *Save custom console commands* <br>
 **!rcon_load {save_name}** - *Load and execute custom console commands* <br>
