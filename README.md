@@ -3,6 +3,8 @@
 Simple plugin that sets the spawn weapons/items.
 
 ### *Admin Commands:*<br>
+Admin flag only, if team choice is admitted 'all' will be used.
+
 ### Weapons and Item Commands<br>
 ---
 **!wp {weapon_shortcode} {ct/t/all}** - *Set Weapon* <br>
