@@ -2,11 +2,13 @@
 
 Simple plugin that sets the spawn weapons/items.
 
-Usage:
+Usage
 
-**!wp {weapon_shortcode} {ct|t|all}** - *Set Weapon* <br>
-**!item {item_shortcode} {amount} {ct|t|all}** - *Set item(s)* <br>
-**!onetap {on/off} {ct|t|all}** - *Enable one-tap mode (clip capacity 1)* <br>
+Admin commands:
+
+**!wp {weapon_shortcode} {ct|t|all}** - *Set Weapon* 
+**!item {item_shortcode} {amount} {ct|t|all}** - *Set item(s)* 
+**!onetap {on/off} {ct|t|all}** - *Enable one-tap mode (clip capacity 1)*
 !wplist - *Print all shortcodes to chat* <br>
 !wpclear - *Remove spawn weapons*
 
