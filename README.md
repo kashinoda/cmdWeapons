@@ -4,7 +4,7 @@ Simple plugin that sets the spawn weapons/items.
 
 Usage
 <br>
-## Admin commands: <br>
+Admin commands: <br>
 **Weapons and Item Commands**<br><br>
 **!wp {weapon_shortcode} {ct/t/all}** - *Set Weapon* <br>
 **!item {item_shortcode} {amount} {ct/t/all}** - *Set item(s)*  <br>
@@ -12,8 +12,7 @@ Usage
 **!hp {amount} {ct/t/all}** - *Set the amount of health a player spawns with*  <br>
 <br>
 <br>
-# Useful Commands <br>
----- <br>
+Useful Commands <br>
 **!flip** - *Switch settings for both sides*  <br>
 **!clear** - "*Clear all settings*  <br>
 **!rr** - *Restart Round* <br>
