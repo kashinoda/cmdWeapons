@@ -29,6 +29,6 @@ Usage (Admin Commands):<br><br>
 
 
 
-Shortcodes:
-
+### Shortcodes <br>
+---
 awp, scout, ak, m4, m4s, sg, aug, deag, usp, glock, galil, famas, mac10, mp9, mp7, ump, bizon, p90, mp5, m249, mag7, negev, nova, shorty, xm, 57, dualies, p250, tec9, cz, r8, p2000
