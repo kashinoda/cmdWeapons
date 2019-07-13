@@ -6,11 +6,14 @@ Usage
 
 Admin commands:
 
-**!wp {weapon_shortcode} {ct|t|all}** - *Set Weapon* 
-**!item {item_shortcode} {amount} {ct|t|all}** - *Set item(s)* 
-**!onetap {on/off} {ct|t|all}** - *Enable one-tap mode (clip capacity 1)*
-!wplist - *Print all shortcodes to chat* <br>
-!wpclear - *Remove spawn weapons*
+**!wp {weapon_shortcode} {ct|t|all}** - *Set Weapon* <br>
+**!item {item_shortcode} {amount} {ct|t|all}** - *Set item(s)*  <br>
+**!onetap {on/off} {ct|t|all}** - *Enable one-tap mode (clip capacity 1)*  <br>
+**!hp {amount} {ct|t|all}** - *Set the amount of health a player spawns with*  <br>
+<br<
+**!flip** - *Switch settings for both sides*  <br>
+**!wpclear** - "*Clear all settings*  <br>
+""!rr"" - *Restart Round*
 
 Shortcodes:
 
